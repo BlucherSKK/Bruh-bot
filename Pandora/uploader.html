@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload with Target Folder</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f4f7f6; }
+        .container { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 400px; text-align: center; }
+
+        /* Стили для кнопки выбора файлов */
+        .upload-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 24px;
+            background-color: #4a90e2;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: 600;
+        }
+        .upload-btn:hover { background-color: #357abd; }
+
+        /* Скрываем стандартный невзрачный инпут */
+        #file-input { display: none; }
+
+        select { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #cbd5e0; margin-bottom: 10px; outline: none; }
+        .status { margin-top: 15px; font-size: 0.9rem; min-height: 1.2rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h3>Загрузка файлов</h3>
+
+    <label for="folder-select">Выберите папку:</label>
+    <select id="folder-select">
+        <option value="1239834885666115604">GFL sfw</option>
+        <option value="1239834985091829782">GFL PG13</option>
+        <option value="1272864940163727371">GFL NSFW</option>
+        <option value="1246550242225295473">GFL MEMES</option>
+        <option value="1283504157252255846">CEDAR sfw</option>
+        <option value="1283504205021319249">CEDAR NSFW</option>
+        <option value="1315371661557628928">Limbus</option>
+        <option value="1408716631516905553">Umamusume</option>
+        <option value="1239852079418179585">Azure lane sfw</option>
+        <option value="1239852139329880114">Azure Lane NSFW</option>
+        <option value="1239863062421438497">Arknights sfw</option>
+        <option value="1239863128221552660">Arknights NSFW</option>
+        <option value="1275685071130722355">ZZZ sfw</option>
+        <option value="1275685107889344552">ZZZ NSFW</option>
+        <option value="1278340013104562248">Blue Archive sfw</option>
+        <option value="1278340170847879232">Blue Archive NSFW</option>
+        <option value="1376610610640322671">Nikke</option>
+        <option value="1239996356249129092">Gup sfw</option>
+        <option value="1239996428030443550">Gup NSFW</option>
+        <option value="1280255818142318695">Тянки в форме</option>
+        <option value="1239855258830897203">OFF sfw</option>
+        <option value="1239855334483427419">OFF NSFW</option>
+        <option value="1408142681770819725">TEST</option>
+        <option value="1391503141912186963">TEST_2</option>
+    </select>
+
+    <input type="file" id="file-input" multiple>
+    <label for="file-input" class="upload-btn">
+        Выбрать файлы
+    </label>
+
+    <div id="status-msg" class="status"></div>
+</div>
+
+<script>
+    const fileInput = document.getElementById('file-input');
+    const folderSelect = document.getElementById('folder-select');
+    const statusMsg = document.getElementById('status-msg');
+
+    // Слушаем изменение инпута (когда файлы выбраны в диалоговом окне)
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+            uploadFiles(fileInput.files);
+        }
+    });
+
+    async function uploadFiles(files) {
+        const accessWord = window.location.pathname;
+        const targetFolder = folderSelect.value;
+
+        const formData = new FormData();
+        formData.append('targetFolder', targetFolder);
+
+        for (let i = 0; i < files.length; i++) {
+            formData.append('files', files[i]);
+        }
+
+        statusMsg.innerText = 'Загрузка...';
+        statusMsg.style.color = '#718096';
+
+        try {
+            const response = await fetch(`/upload${accessWord}`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.status === 403) {
+                throw new Error('Неверный пароль доступа');
+            }
+
+            if (!response.ok) {
+                throw new Error('Ошибка сервера: ' + response.status);
+            }
+
+            const result = await response.json();
+            statusMsg.innerText = 'Успех! Файл №' + result.lastId;
+            statusMsg.style.color = 'green';
+
+            // Сбрасываем инпут, чтобы можно было выбрать те же файлы повторно
+            fileInput.value = '';
+
+        } catch (err) {
+            statusMsg.innerText = err.message;
+            statusMsg.style.color = 'red';
+            fileInput.value = '';
+        }
+    }
+</script>
+</body>
+</html>
